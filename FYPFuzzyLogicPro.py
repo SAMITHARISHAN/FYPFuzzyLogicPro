@@ -2,32 +2,33 @@ import numpy as np
 import skfuzzy as fuzz
 from skfuzzy import control as ctrl
 import matplotlib.pyplot as plt
+from timeit import default_timer as timer
 
 # New Antecedent/Consequent objects hold universe variables and membership
 # functions
-vehicle = ctrl.Antecedent(np.arange(0, 25, 1), 'vehicle')
+vehicle = ctrl.Antecedent(np.arange(0, 35, 1), 'vehicle')
 vSpeed = ctrl.Antecedent(np.arange(0, 60, 1), 'vSpeed')
 pedestrian = ctrl.Antecedent(np.arange(0, 25, 1), 'pedestrian')
-WaitingTime = ctrl.Antecedent(np.arange(0,100,1), 'WaitingTime')
+WaitingTime = ctrl.Antecedent(np.arange(0, 60,1), 'WaitingTime')
 signal = ctrl.Consequent(np.arange(0, 11, 1), 'signal')
 
 # Auto-membership function population is possible with .automf(3, 5, or 7)
 
-vehicle['low'] = fuzz.trimf(vehicle.universe, [0, 0, 13])
-vehicle['medium'] = fuzz.trimf(vehicle.universe, [0, 13, 25])
-vehicle['high'] = fuzz.trimf(vehicle.universe, [13, 25, 25])
+vehicle['low'] = fuzz.trimf(vehicle.universe, [0, 0, 10])
+vehicle['medium'] = fuzz.trimf(vehicle.universe, [5, 15, 20])
+vehicle['high'] = fuzz.trimf(vehicle.universe, [15, 25, 35])
 
-WaitingTime['low'] = fuzz.trimf(WaitingTime.universe, [0, 0, 20])
-WaitingTime['medium'] = fuzz.trimf(WaitingTime.universe, [0, 20, 40])
-WaitingTime['high'] = fuzz.trimf(WaitingTime.universe, [20, 40, 100])
+WaitingTime['low'] = fuzz.trimf(WaitingTime.universe, [0, 10, 25])
+WaitingTime['medium'] = fuzz.trimf(WaitingTime.universe, [15, 25, 35])
+WaitingTime['high'] = fuzz.trimf(WaitingTime.universe, [20, 40, 60])
 
-vSpeed['low'] = fuzz.trimf(vSpeed.universe, [0, 0, 20])
-vSpeed['medium'] = fuzz.trimf(vSpeed.universe, [0, 20, 40])
-vSpeed['high'] = fuzz.trimf(vSpeed.universe, [20, 40, 60])
+vSpeed['low'] = fuzz.trimf(vSpeed.universe, [5, 15, 30])
+vSpeed['medium'] = fuzz.trimf(vSpeed.universe, [25, 35, 40])
+vSpeed['high'] = fuzz.trimf(vSpeed.universe, [35, 45, 60])
 
-pedestrian['low'] = fuzz.trimf(pedestrian.universe, [0, 0, 13])
-pedestrian['medium'] = fuzz.trimf(pedestrian.universe, [0, 13, 25])
-pedestrian['high'] = fuzz.trimf(pedestrian.universe, [13, 25, 25])
+pedestrian['low'] = fuzz.trimf(pedestrian.universe, [0, 5, 10])
+pedestrian['medium'] = fuzz.trimf(pedestrian.universe, [8, 12, 16])
+pedestrian['high'] = fuzz.trimf(pedestrian.universe, [12, 20, 25])
 
 signal['off'] = fuzz.trimf(signal.universe, [0, 0, 6])
 signal['on'] = fuzz.trimf(signal.universe, [0, 6, 10])
@@ -35,17 +36,20 @@ signal['on'] = fuzz.trimf(signal.universe, [0, 6, 10])
 
 
 # You can see how these look with .view()
-vehicle.view()
-plt.show()
+# vehicle.view()
+# plt.show()
 
-vSpeed.view()
-plt.show()
+# WaitingTime.view()
+# plt.show()
 
-pedestrian.view()
-plt.show()
+# vSpeed.view()
+# plt.show()
 
-signal.view()
-plt.show()
+# pedestrian.view()
+# plt.show()
+
+# signal.view()
+# plt.show()
 
 
 rule1 = ctrl.Rule(vehicle['low'] & WaitingTime['low'] & pedestrian['low'] & vSpeed['low'], signal['on'])
@@ -182,16 +186,33 @@ signal_ctrl = ctrl.ControlSystem([rule1,rule2, rule3,
 
 
 TLsignal = ctrl.ControlSystemSimulation(signal_ctrl)
+V = 30
+P = 10
+vSP = 25
+WT = 30
 
-TLsignal.input['vehicle'] = 5
-TLsignal.input['pedestrian'] = 5 
-TLsignal.input['vSpeed'] = 20
-TLsignal.input['WaitingTime'] = 20
-
-
+if WT > 5 and WT < 40:
 # Crunch the numbers
-TLsignal.compute()
+    
+    TLsignal.input['vehicle'] = V
+    TLsignal.input['pedestrian'] = P
+    TLsignal.input['vSpeed'] = vSP
+    TLsignal.input['WaitingTime'] = WT
 
-print(TLsignal.output['signal'])
-signal.view(sim=TLsignal)
-plt.show()
+    start = timer()
+    TLsignal.compute()
+    end = timer()
+    print(end - start)
+
+    print(TLsignal.output['signal'])
+    signal.view(sim=TLsignal)
+    # plt.show()
+
+elif WT <= 5:
+    print("Pedestrians cannot cross the road, vehicles are moving")
+
+elif WT > 40:
+    print("Now pedestrians can cross the road")
+
+
+
