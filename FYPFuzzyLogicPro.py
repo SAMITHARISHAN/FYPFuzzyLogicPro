@@ -206,7 +206,7 @@ if WT > 5 and WT < 40:
 
     print(TLsignal.output['signal'])
     signal.view(sim=TLsignal)
-    # plt.show()
+    plt.show()
 
 elif WT <= 5:
     print("Pedestrians cannot cross the road, vehicles are moving")

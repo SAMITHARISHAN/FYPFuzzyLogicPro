@@ -37,21 +37,21 @@ def init_fuzzy_system():
     # You can see how these look with .view()
     # vehicle.view()
     # plt.show()
-    #
+    
     # WaitingTime.view()
     # plt.show()
-    #
+    
     # vSpeed.view()
     # plt.show()
-    #
+    
     # pedestrian.view()
     # plt.show()
-    #
+    
     # signal.view()
     # plt.show()
 
 
-    rule1 = ctrl.Rule(vehicle['low'] & WaitingTime['low'] & pedestrian['low'] & vSpeed['low'], signal['on'])
+    rule1 = ctrl.Rule(vehicle['low'] & WaitingTime['low'] & pedestrian['low'] & vSpeed['low'], signal['off'])
     rule2 = ctrl.Rule(vehicle['medium'] & WaitingTime['low'] & pedestrian['low'] & vSpeed['low'], signal['off'])
     rule3 = ctrl.Rule(vehicle['high'] & WaitingTime['low'] & pedestrian['low'] & vSpeed['low'], signal['off'])
     rule4 = ctrl.Rule(vehicle['low'] & WaitingTime['medium'] & pedestrian['low'] & vSpeed['low'], signal['on'])
@@ -141,8 +141,8 @@ def init_fuzzy_system():
     rule80 = ctrl.Rule(vehicle['medium'] & WaitingTime['high'] & pedestrian['high'] & vSpeed['high'], signal['off'])
     rule81 = ctrl.Rule(vehicle['high'] & WaitingTime['high'] & pedestrian['high'] & vSpeed['high'], signal['off'])
 
-    # rule1.view()
-    # plt.show()
+    rule1.view()
+    plt.show()
 
 
     signal_ctrl = ctrl.ControlSystem([rule1, rule2, rule3,
@@ -167,7 +167,7 @@ def init_fuzzy_system():
 
                                       rule46, rule47, rule48,
                                       rule49, rule50, rule51,
-                                      rule52, rule53, rule54,
+                                      rule52, rule53, rule54, 
 
                                       rule55, rule56, rule57,
                                       rule58, rule59, rule60,
@@ -184,9 +184,21 @@ def init_fuzzy_system():
     TLsignal = ctrl.ControlSystemSimulation(signal_ctrl)
     return TLsignal
 
-
+arr_v = []
+arr_p = []
+arr_s = []
+arr_w = []
+arr_decision = []
+Tot_count = []
 # return True if pedestrian should get green light.
-def get_decision(simulation, vehicle_count, pedestrian_count, avg_vehicle_speed, pedestrian_wait_time, requirnment_thresh):
+def get_decision(simulation, vehicle_count, pedestrian_count, avg_vehicle_speed, pedestrian_wait_time, requirnment_thresh,count):
+
+    arr_v.append(vehicle_count)
+    arr_p.append(pedestrian_count)
+    arr_s.append(avg_vehicle_speed)
+    arr_w.append(pedestrian_wait_time)
+    Tot_count.append(count)
+
     vehicle_count_buff = 1
     pedestrian_count_buff = 1
     avg_vehicle_speed_buff = 1
@@ -238,26 +250,50 @@ def get_decision(simulation, vehicle_count, pedestrian_count, avg_vehicle_speed,
         end = timer()
         print(end - start)
         out_val = simulation.output['signal']
+        
         print(out_val)
         if out_val > requirnment_thresh:
+            arr_decision.append(5)
             return True  # pedestrian get green light
         else:
+            arr_decision.append(0)
             return False  # vehicles get green light
     elif pedestrian_wait_time_buff <= 5:
         print("Pedestrians cannot cross the road, vehicles are moving")
+        arr_decision.append(0)
         return False
-    elif pedestrian_wait_time_buff > 40:
+    elif pedestrian_wait_time_buff >= 40:
+        arr_decision.append(5)
         print("Now pedestrians can cross the road")
         return True
 
+def get_graph():
+    # labels = ['vehicle_count', 'pedestrian_count', 'avg_speed', 'waiting_time']
+    plt.plot(Tot_count,arr_v,'r',label="vehicle_count")
+    plt.plot(Tot_count,arr_p,'b',label="pedestrian_count")
+    plt.plot(Tot_count,arr_s,'g',label="avg_speed")
+    plt.plot(Tot_count,arr_w,'m',label="waiting_time")
+    plt.plot(Tot_count,arr_decision,label="signal")
+    plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc='lower left',ncol=3, mode="expand", borderaxespad=0.) 
+    plt.ylim(ymin=0)
+    plt.xlim(xmin=0)     
+    plt.show()
 
 
 if __name__ == "__main__":
     sim = init_fuzzy_system()
     #               vehicle_count (35), pedestrian_count (25), avg_vehicle_speed (60), pedestrian_wait_time (60)
-    traffic_data = [(10, 5, 30, 20),  # take time as t,  t=5
-                    ]  # t=38
-
+    traffic_data = [(5, 1, 30, 5),
+                    (8, 3, 35, 10),
+                    (3, 3, 32, 15),
+                    (1, 4, 25, 20),
+                  
+                    ] 
+                    
+    # List_length = len(traffic_data)
+    count = 0
     for i in traffic_data:
-        print(get_decision(sim, i[0], i[1], i[2], i[3], 4))  # requirement_threshold taken as 4
+        print(get_decision(sim, i[0], i[1], i[2], i[3], 4, count))  # requirement_threshold taken as 4
+        count = count + 1
+    get_graph()
         # print True if pedestrians get green light
