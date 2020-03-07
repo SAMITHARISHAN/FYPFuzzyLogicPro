@@ -1,7 +1,7 @@
 import csv
 import pandas as pd
 
-from fuzzy_decision.Decision import init_fuzzy_system, get_decision
+from fuzzy_decision.Decision import init_fuzzy_system, get_decision, get_graph
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtWidgets import (QWidget, QTableView, QPushButton, QLineEdit,
                              QInputDialog, QApplication, QFileDialog, QCheckBox, QLabel, QVBoxLayout)
@@ -39,6 +39,7 @@ class Example(QWidget):
     pCount = []
     vSpeed = []
     wTime = []
+    signal = []
     trafficdata = []
     arr = []
     @QtCore.pyqtSlot()
@@ -74,11 +75,19 @@ class Example(QWidget):
                 ]
                 self.model.appendRow(items)
 
-                # get_decision(self.sim, row[0], row[1], row[2], row[3], self.requirement_threshold)
+                green_light = get_decision(self.sim, int(row[0]), int(row[1]), int(row[2]), int(row[3]), self.requirement_threshold)
+                print(green_light)
 
-    # get_decision(self.sim, row[0], row[1], row[2], row[3], self.requirement_threshold)
-        for i in self.arr:
-            print(i)
+                if green_light:
+                    self.signal.append(5)
+                else:
+                    self.signal.append(0)
+
+        # for i in self.vCount:
+        #     print(i)
+
+        get_graph(self.vCount, self.pCount, self.vSpeed, self.wTime, self.signal)
+
 if __name__ == '__main__':
     app = QApplication(sys.argv)
 
