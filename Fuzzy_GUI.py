@@ -1,87 +1,87 @@
-#!/usr/bin/python3
-# -*- coding: utf-8 -*-
+import csv
+import pandas as pd
 
-"""
-ZetCode PyQt5 tutorial
-
-In this example, we receive data from
-a QInputDialog dialog.
-
-Aauthor: Jan Bodnar
-Website: zetcode.com
-Last edited: August 2017
-"""
-
-from PyQt5.QtWidgets import (QWidget, QPushButton, QLineEdit,
-                             QInputDialog, QApplication, QFileDialog, QLabel)
+from fuzzy_decision.Decision import init_fuzzy_system, get_decision
+from PyQt5 import QtCore, QtGui
+from PyQt5.QtWidgets import (QWidget, QTableView, QPushButton, QLineEdit,
+                             QInputDialog, QApplication, QFileDialog, QCheckBox, QLabel, QVBoxLayout)
 import sys
 import os
-import csv
 
 class Example(QWidget):
 
-    def __init__(self):
-        super().__init__()
+    # def __init__(self):
+    #     super().__init__()
+    #
+    #     self.initUI()
 
-        self.initUI()
+    def __init__(self, fileName, parent=None):
+        super(Example, self).__init__(parent)
+        self.fileName = fileName
 
-    def initUI(self):
-        self.btn = QPushButton('Vehicle Count', self)
-        self.btn.move(20, 20)
-        self.btn.clicked.connect(self.openFileNameDialog)
+        self.model = QtGui.QStandardItemModel(self)
 
+        self.tableView = QTableView(self)
+        self.tableView.setModel(self.model)
+        self.tableView.horizontalHeader().setStretchLastSection(True)
 
-        self.btn5 = QPushButton('Start', self)
-        self.btn5.move(20, 160)
-        self.btn5.clicked.connect(self.exe_another)
+        self.pushButtonLoad = QPushButton(self)
+        self.pushButtonLoad.setText("Load Csv File!")
+        self.pushButtonLoad.clicked.connect(self.on_pushButtonLoad_clicked)
 
+        self.layoutVertical = QVBoxLayout(self)
+        self.layoutVertical.addWidget(self.tableView)
+        self.layoutVertical.addWidget(self.pushButtonLoad)
 
+    sim = init_fuzzy_system()
+    requirement_threshold = 4
+    vCount = []
+    pCount = []
+    vSpeed = []
+    wTime = []
+    trafficdata = []
+    arr = []
+    @QtCore.pyqtSlot()
+    def on_pushButtonLoad_clicked(self):
 
-        # self.lbl1 = QLabel('Vehicle', self)
-        # self.lbl1.move(80, 80)
-        #
-        # self.lbl2 = QLabel('Pedestrians', self)
-        # self.lbl2.move(80, 100)
-        #
-        # self.lbl3 = QLabel('Pedestrians', self)
-        # self.lbl3.move(80, 100)
-        #
-        # self.lbl4 = QLabel('Pedestrians', self)
-        # self.lbl4.move(80, 100)
-
-        self.setGeometry(400, 400, 300, 200)
-        self.setWindowTitle('Control Center')
-        self.show()
-
-    def showDialog(self):
-        text, ok = QInputDialog.getText(self, 'Input Dialog',
-                                        'Enter your name:')
-
-        if ok:
-            self.le.setText(str(text))
-
-    def exe_another(self):
-
-        comnd = "python Real-time.py " + "-i1 " + self.le.text() + " -i2 " + self.le2.text() + " -i3 " + self.le3.text() + " -i4 " + self.le4.text() + " -i5 "
-        print(comnd)
-        os.system(comnd)
-
-    def openFileNameDialog(self):
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
         fileName, _ = QFileDialog.getOpenFileName(self, "QFileDialog.getOpenFileName()", "",
-                                                  "All Files (*);;Python Files (*.py)", options=options)
+                                                          "All Files (*);;Python Files (*.py)", options=options)
         if fileName:
+
             print(fileName)
-            self.le.setText(str(fileName))
-            
 
-    def test(self):
-        print("")
+            # self.le.setText(str(fileName))
+        # df = pd.read_csv("Dataset1.csv")
+        with open('Dataset1.csv', 'r') as fileInput:
+            csv_reader = csv.reader(fileInput)
 
+            next(csv_reader)
 
+            for row in csv_reader:
+                self.vCount.append(row[0])
+                self.pCount.append(row[1])
+                self.vSpeed.append(row[2])
+                self.wTime.append(row[3])
+                # print(self.vCount)
+                self.trafficdata = [(row[0], row[1], row[2], row[3])]
+                # print(self.trafficdata)
+                self.arr.append(self.trafficdata)
+                items = [
+                    QtGui.QStandardItem(field)
+                    for field in row
+                ]
+                self.model.appendRow(items)
 
+                # get_decision(self.sim, row[0], row[1], row[2], row[3], self.requirement_threshold)
+
+    # get_decision(self.sim, row[0], row[1], row[2], row[3], self.requirement_threshold)
+        for i in self.arr:
+            print(i)
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    ex = Example()
+
+    ex = Example("Dataset1.csv")
+    ex.show()
     sys.exit(app.exec_())
